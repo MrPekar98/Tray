@@ -1,8 +1,7 @@
 package org.aau.tray.store;
 
-import org.aau.tray.store.data.Disk;
+import org.aau.tray.core.file.FileSet;
 import org.aau.tray.store.data.Fetchable;
-import org.aau.tray.store.data.RAM;
 import org.aau.tray.store.index.BucketArray;
 import org.aau.tray.store.index.Index;
 import org.aau.tray.store.tupletable.TupleTable;
@@ -11,9 +10,13 @@ import java.util.List;
 
 public class Factory
 {
-    public static BucketArray bucketArray(int initialCapacity, boolean mem)
+    public static FileSet fileSet(Fetchable ... files)
     {
-        Fetchable data = mem ? new RAM() : new Disk();
+        return new FileSet(files);
+    }
+
+    public static BucketArray bucketArray(int initialCapacity, FileSet data)
+    {
         return new BucketArray(initialCapacity, data);
     }
 
