@@ -10,7 +10,7 @@ public class RAMTest
     @Test
     public void testWrite()
     {
-        RAM ram = new RAM();
+        RAM ram = new RAM("test");
         assertEquals(6, ram.write(0, "Test 1"));
         assertEquals(6, ram.write(1, "Test 2"));
         assertEquals(7, ram.write(2, "Test 22"));
@@ -21,7 +21,7 @@ public class RAMTest
     @Test
     public void testRead()
     {
-        RAM ram = new RAM();
+        RAM ram = new RAM("test");
         ram.write(0, "Test 1");
         ram.write(1, "Test 2");
         ram.write(2, "Test 22");
