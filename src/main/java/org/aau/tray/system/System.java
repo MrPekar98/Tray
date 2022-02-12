@@ -1,7 +1,11 @@
 package org.aau.tray.system;
 
+import org.aau.tray.store.data.Disk;
+import org.aau.tray.store.data.Fetchable;
+import org.aau.tray.store.data.RAM;
 import org.aau.tray.system.journal.Journal;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -19,9 +23,22 @@ public class System
         try
         {
             probs.load(ClassLoader.getSystemResourceAsStream(CONFIG_FILE));
-            idDictionary = new IdDictionary(indexOrders());
             dictionaryJournal = new Journal(Path.of(probs.getProperty("journal")), "dictionary");
             indexJournal = new Journal(Path.of(probs.getProperty("journal")), "index");
+
+            List<String> orders = indexOrders();
+            Fetchable[] memory = new Fetchable[orders.size()];
+
+            for (int i = 0; i < orders.size(); i++)
+            {
+                if (probs.getProperty("in_memory").equals("true"))
+                    memory[i] = new Disk(new File(probs.getProperty("dictionary_path")), orders.get(i));
+
+                else
+                    memory[i] = new RAM(orders.get(i));
+            }
+
+            idDictionary = new IdDictionary(orders, memory);
         }
 
         catch (IOException exc)

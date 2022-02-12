@@ -1,9 +1,10 @@
 package org.aau.tray.core;
 
+import org.aau.tray.system.System;
+
 public class IdFactory
 {
-    // TODO: This needs to be assigned the largest existing ID + 1
-    private static int counter = 0;
+    private static int counter = System.getIdDictionary().highestId().id() + 1;
 
     public static NodeId nodeId()
     {
