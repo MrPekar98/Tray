@@ -37,12 +37,26 @@ public class IdDictionary
         load();
     }
 
+    // TODO: Missing saving of single nodes and full triples, and their serialization
     private void load()
     {
         for (String order : this.orders)
         {
             int orderIdx = this.orders.indexOf(order);
+            int idCounter = 0;
 
+            try
+            {
+                while (true)
+                {
+                    String data = this.mem[orderIdx].read(idCounter++);
+                    NodeSerializer s1 = new NodeSerializer(data.split("--")[0]), s2 = new NodeSerializer(data.split("--")[1]);
+
+                    // TODO: Add as tuple
+                }
+            }
+
+            catch (Exception exc) {}
         }
     }
 
