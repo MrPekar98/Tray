@@ -42,19 +42,19 @@ public class TupleTable extends TupleTableBase
 
             Integer solutionId;
 
-            if (System.getIdDictionary().getNodeDictionary().containsKey(t.get(2)))
-                solutionId = System.getIdDictionary().getNodeDictionary().get(t.get(2));
+            if (System.getIdDictionary().containsNode(t.get(2)))
+                solutionId = System.getIdDictionary().getNodeId(t.get(2));
 
             else
             {
                 solutionId = IdFactory.nodeId().id();
-                System.getIdDictionary().getNodeDictionary().put(t.get(2), solutionId);
+                System.getIdDictionary().addNode(t.get(2), solutionId);
             }
 
             super.indexes[i].add(key.id(), Set.of(NodeId.make(solutionId)));
         }
 
-        System.getIdDictionary().getTripleDictionary().put(t, IdFactory.nodeId().id());
+        System.getIdDictionary().addTriple(t, IdFactory.nodeId().id());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class TupleTable extends TupleTableBase
             System.getIdDictionary().removeId(order, reordered);
         }
 
-        System.getIdDictionary().getTripleDictionary().remove(t);
+        System.getIdDictionary().removeTriple(t);
     }
 
     @Override

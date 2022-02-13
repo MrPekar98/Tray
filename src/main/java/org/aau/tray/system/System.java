@@ -16,6 +16,8 @@ public class System
     private static final Properties probs = new Properties();
     private static final String CONFIG_FILE = "configuration.config";
     private static IdDictionary idDictionary;
+    private static final String NODE_MEM = "node";
+    private static final String TRIPLE_MEM = "triple";
     private static Journal dictionaryJournal, indexJournal;
 
     public static void start()
@@ -38,7 +40,9 @@ public class System
                     memory[i] = new RAM(orders.get(i));
             }
 
-            idDictionary = new IdDictionary(orders, memory);
+            boolean isInMemory = probs.getProperty("in_memory").equals("true");
+            idDictionary = new IdDictionary(orders, memory, isInMemory ? new RAM(TRIPLE_MEM) : new Disk(new File(probs.getProperty("dictionary_path")), TRIPLE_MEM),
+                    probs.getProperty("in_memory").equals("true") ? new RAM(NODE_MEM) : new Disk(new File(probs.getProperty("dictionary_path")), NODE_MEM));
         }
 
         catch (IOException exc)

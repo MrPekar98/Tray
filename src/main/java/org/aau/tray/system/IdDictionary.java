@@ -1,105 +1,141 @@
 package org.aau.tray.system;
 
 import org.aau.tray.core.NodeId;
-import org.aau.tray.core.NodeSerializer;
 import org.aau.tray.store.data.Fetchable;
+import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.atlas.lib.tuple.Tuple;
 import org.apache.jena.atlas.lib.tuple.TupleFactory;
 import org.apache.jena.graph.Node;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-// Order n is the node dictionary
 // Order f is the fully concrete triple dictionary
 public class IdDictionary
 {
     private List<Map<Tuple<Node>, Integer>> dictionaries;
-    private Map<Node, Integer> nodeDictionary = new TreeMap<>();
-    private List<String> orders;
-    private Fetchable[] mem;
+    private Map<Node, Integer> nodeDictionary = new HashMap<>();
+    private IdDictionaryMemory mem;
 
-    public IdDictionary(List<String> orders, Fetchable[] memory)
+    public IdDictionary(List<String> orders, Fetchable[] memory, Fetchable tripleMemory, Fetchable nodeMemory)
     {
+        orders.add("f");
+        this.mem = new IdDictionaryMemory(orders, (Fetchable[]) List.of(memory, tripleMemory).toArray(), nodeMemory);
         this.dictionaries = new ArrayList<>(orders.size());
-        this.orders = orders;
-        this.mem = memory;
+        this.dictionaries.add(new HashMap<>());
 
-        for (String order : this.orders)
+        for (String order : this.mem.getOrders())
         {
-            this.dictionaries.add(new TreeMap<>());
+            this.dictionaries.add(new HashMap<>());
         }
 
-        this.dictionaries.add(new TreeMap<>());
-        this.orders.add("f");
         load();
     }
 
-    // TODO: Missing saving of single nodes and full triples, and their serialization
+    // TODO: Missing saving of single nodes and their serialization
     private void load()
     {
-        for (String order : this.orders)
+        List<Pair<Node, Integer>> allNodes = this.mem.addNodes();
+        allNodes.forEach(p -> this.nodeDictionary.put(p.getLeft(), p.getRight()));
+
+        for (String order : this.mem.getOrders())
         {
-            int orderIdx = this.orders.indexOf(order);
-            int idCounter = 0;
-
-            try
-            {
-                while (true)
-                {
-                    String data = this.mem[orderIdx].read(idCounter++);
-                    NodeSerializer s1 = new NodeSerializer(data.split("--")[0]), s2 = new NodeSerializer(data.split("--")[1]);
-
-                    // TODO: Add as tuple
-                }
-            }
-
-            catch (Exception exc) {}
+            List<Pair<Tuple<Node>, Integer>> allTuples = this.mem.allTuples(order);
+            allTuples.forEach(p -> this.dictionaries.get(this.mem.getOrders().indexOf(order)).put(p.getLeft(), p.getRight()));
         }
     }
 
-    private void save(String order, Tuple<Node> t, Integer id)
+    public void addNode(Node n, Integer id)
     {
-        NodeSerializer s1 = new NodeSerializer(t.get(0)), s2 = new NodeSerializer(t.get(1));
-        int orderIdx = this.orders.indexOf(order);
-        this.mem[orderIdx].write(id, s1.serialize() + "--" + s2.serialize());
+        this.nodeDictionary.put(n, id);
+        this.mem.saveNode(n, id);
     }
 
-    public Map<Node, Integer> getNodeDictionary()
+    public void removeNode(Node n)
     {
-        return this.nodeDictionary;
+        if (containsNode(n))
+            this.mem.deleteNode(getNodeId(n));
+
+        this.nodeDictionary.remove(n);
     }
 
-    public Map<Tuple<Node>, Integer> getTripleDictionary()
+    public boolean containsNode(Node n)
     {
-        int idx = this.orders.indexOf("f");
+        return this.nodeDictionary.containsKey(n);
+    }
+
+    public Integer getNodeId(Node n)
+    {
+        return this.nodeDictionary.get(n);
+    }
+
+    private Map<Tuple<Node>, Integer> getTripleDictionary()
+    {
+        int idx = this.mem.getOrders().indexOf("f");
         return this.dictionaries.get(idx);
+    }
+
+    public void addTriple(Tuple<Node> triple, Integer id)
+    {
+        if (triple.len() != 3)
+            throw new IllegalArgumentException("Tuple is not triple: addTriple");
+
+        getTripleDictionary().put(triple, id);
+        this.mem.save("f", triple, id);
+    }
+
+    public void removeTriple(Tuple<Node> triple)
+    {
+        if (triple.len() != 3)
+            throw new IllegalArgumentException("Tuple is not triple: removeTriple");
+
+        if (containsTriple(triple))
+            this.mem.delete("f", getTripleId(triple));
+
+        getTripleDictionary().remove(triple);
+    }
+
+    public boolean containsTriple(Tuple<Node> triple)
+    {
+        if (triple.len() != 3)
+            throw new IllegalArgumentException("Tuple is not triple: containsTriple");
+
+        return getTripleDictionary().containsKey(triple);
+    }
+
+    public Integer getTripleId(Tuple<Node> triple)
+    {
+        if (triple.len() != 3)
+            throw new IllegalArgumentException("Tuple is not triple: getTripleId");
+
+        return getTripleDictionary().get(triple);
     }
 
     public void addId(String order, Tuple<Node> t, Integer id)
     {
-        int dictionaryIndex = this.orders.indexOf(order);
+        int dictionaryIndex = this.mem.getOrders().indexOf(order);
         this.dictionaries.get(dictionaryIndex).put(TupleFactory.tuple(t.get(0), t.get(1)), id);
-        save(order, t, id);
+        this.mem.save(order, t, id);
     }
 
     public void removeId(String order, Tuple<Node> t)
     {
-        int dictionaryIndex = this.orders.indexOf(order);
+        int dictionaryIndex = this.mem.getOrders().indexOf(order);
+
+        if (containsTuple(order, t))
+            this.mem.delete(order, getIdFromTuple(order, t));
+
         this.dictionaries.get(dictionaryIndex).remove(t);
     }
 
     public Integer getIdFromTuple(String order, Tuple<Node> t)
     {
-        int dictionaryIndex = this.orders.indexOf(order);
+        int dictionaryIndex = this.mem.getOrders().indexOf(order);
         return this.dictionaries.get(dictionaryIndex).get(TupleFactory.tuple(t.get(0), t.get(1)));
     }
 
     public boolean containsTuple(String order, Tuple<Node> t)
     {
-        int dictionaryIndex = this.orders.indexOf(order);
+        int dictionaryIndex = this.mem.getOrders().indexOf(order);
         return this.dictionaries.get(dictionaryIndex).containsKey(t);
     }
 
