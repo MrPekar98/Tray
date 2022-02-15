@@ -114,7 +114,7 @@ public final class IdDictionaryMemory
         }
     }
 
-    List<Pair<Node, Integer>> addNodes()
+    List<Pair<Node, Integer>> allNodes()
     {
         List<Pair<Node, Integer>> nodes = new ArrayList<>();
         Integer idCounter = 0;

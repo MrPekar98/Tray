@@ -9,6 +9,9 @@ import org.apache.jena.graph.Node;
 
 import java.util.*;
 
+// TODO: Dictionaries should not contain tuple of nodes, but tuple of node IDs, and then use the node dictionary for the conversion
+// TODO: Same for triple dictionary
+// TODO: I think this ID dictionary component needs an entire rewrite. It is a pretty central elements. It won't harm the TupleTable, which uses this component.
 // Order f is the fully concrete triple dictionary
 public class IdDictionary
 {
@@ -34,7 +37,7 @@ public class IdDictionary
     // TODO: Missing saving of single nodes and their serialization
     private void load()
     {
-        List<Pair<Node, Integer>> allNodes = this.mem.addNodes();
+        List<Pair<Node, Integer>> allNodes = this.mem.allNodes();
         allNodes.forEach(p -> this.nodeDictionary.put(p.getLeft(), p.getRight()));
 
         for (String order : this.mem.getOrders())
