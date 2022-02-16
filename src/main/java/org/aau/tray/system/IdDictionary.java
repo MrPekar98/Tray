@@ -6,10 +6,7 @@ import org.aau.tray.store.dictionary.TriplePatternDictionary;
 
 import java.util.List;
 
-// TODO: Dictionaries should not contain tuple of nodes, but tuple of node IDs, and then use the node dictionary for the conversion
-// TODO: Same for triple dictionary
-// TODO: I think this ID dictionary component needs an entire rewrite. It is a pretty central elements. It won't harm the TupleTable, which uses this component.
-// Order f is the fully concrete triple dictionary
+// Collection of dictionaries necessary for indexing
 public class IdDictionary
 {
     private ConcreteTripleDictionary tripleDictionary;
@@ -33,7 +30,7 @@ public class IdDictionary
         return this.tripleDictionary;
     }
 
-    public TriplePatternDictionary getTriplePatternDictionary(String order)
+    public TriplePatternDictionary triplePatternDictionary(String order)
     {
         int idx = this.orders.indexOf(order);
         return this.triplePatternDictionaries[idx];
