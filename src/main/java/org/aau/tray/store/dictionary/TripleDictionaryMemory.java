@@ -12,7 +12,7 @@ import java.util.List;
 
 public class TripleDictionaryMemory implements DictionaryMemory<Tuple<Integer>>
 {
-    Fetchable mem;
+    private Fetchable mem;
 
     public TripleDictionaryMemory(Fetchable memory)
     {

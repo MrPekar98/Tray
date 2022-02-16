@@ -1,9 +1,10 @@
 package org.aau.tray.system;
 
-import org.aau.tray.store.dictionary.Dictionary;
-import org.aau.tray.store.dictionary.TripleDictionary;
-import org.apache.jena.atlas.lib.tuple.Tuple;
-import org.apache.jena.graph.Node;
+import org.aau.tray.store.dictionary.ConcreteTripleDictionary;
+import org.aau.tray.store.dictionary.NodeDictionary;
+import org.aau.tray.store.dictionary.TriplePatternDictionary;
+
+import java.util.List;
 
 // TODO: Dictionaries should not contain tuple of nodes, but tuple of node IDs, and then use the node dictionary for the conversion
 // TODO: Same for triple dictionary
@@ -11,20 +12,30 @@ import org.apache.jena.graph.Node;
 // Order f is the fully concrete triple dictionary
 public class IdDictionary
 {
-    private TripleDictionary tripleDictionary;
+    private ConcreteTripleDictionary tripleDictionary;
+    private TriplePatternDictionary[] triplePatternDictionaries;
+    private List<String> orders;
 
-    public IdDictionary(TripleDictionary tripleDictionary)
+    public IdDictionary(ConcreteTripleDictionary tripleDictionary, TriplePatternDictionary[] triplePatternDictionaries, String[] orders)
     {
         this.tripleDictionary = tripleDictionary;
+        this.triplePatternDictionaries = triplePatternDictionaries;
+        this.orders = List.of(orders);
     }
 
-    public Dictionary<Node, Integer> nodeDictionary()
+    public NodeDictionary nodeDictionary()
     {
         return this.tripleDictionary.getNodeDictionary();
     }
 
-    public Dictionary<Tuple<Node>, Integer> tripleDictionary()
+    public ConcreteTripleDictionary tripleDictionary()
     {
         return this.tripleDictionary;
+    }
+
+    public TriplePatternDictionary getTriplePatternDictionary(String order)
+    {
+        int idx = this.orders.indexOf(order);
+        return this.triplePatternDictionaries[idx];
     }
 }

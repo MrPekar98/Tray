@@ -3,6 +3,9 @@ package org.aau.tray.system;
 import org.aau.tray.store.data.Disk;
 import org.aau.tray.store.data.Fetchable;
 import org.aau.tray.store.data.RAM;
+import org.aau.tray.store.dictionary.ConcreteTripleDictionary;
+import org.aau.tray.store.dictionary.NodeDictionary;
+import org.aau.tray.store.dictionary.TriplePatternDictionary;
 import org.aau.tray.system.journal.Journal;
 
 import java.io.File;
@@ -18,31 +21,36 @@ public class System
     private static IdDictionary idDictionary;
     private static final String NODE_MEM = "node";
     private static final String TRIPLE_MEM = "triple";
-    private static Journal dictionaryJournal, indexJournal;
+    private static Journal idDictionaryJournal, indexJournal;
 
     public static void start()
     {
         try
         {
             probs.load(ClassLoader.getSystemResourceAsStream(CONFIG_FILE));
-            dictionaryJournal = new Journal(Path.of(probs.getProperty("journal")), "dictionary");
+            idDictionaryJournal = new Journal(Path.of(probs.getProperty("journal")), "dictionary");
             indexJournal = new Journal(Path.of(probs.getProperty("journal")), "index");
 
-            List<String> orders = indexOrders();
-            Fetchable[] memory = new Fetchable[orders.size()];
+            String[] orders = indexOrders();
+            Fetchable[] memory = new Fetchable[orders.length];
 
-            for (int i = 0; i < orders.size(); i++)
+            for (int i = 0; i < orders.length; i++)
             {
                 if (probs.getProperty("in_memory").equals("true"))
-                    memory[i] = new Disk(new File(probs.getProperty("dictionary_path")), orders.get(i));
+                    memory[i] = new Disk(new File(probs.getProperty("dictionary_path")), orders[i]);
 
                 else
-                    memory[i] = new RAM(orders.get(i));
+                    memory[i] = new RAM(orders[i]);
             }
 
             boolean isInMemory = probs.getProperty("in_memory").equals("true");
-            idDictionary = new IdDictionary(orders, memory, isInMemory ? new RAM(TRIPLE_MEM) : new Disk(new File(probs.getProperty("dictionary_path")), TRIPLE_MEM),
-                    probs.getProperty("in_memory").equals("true") ? new RAM(NODE_MEM) : new Disk(new File(probs.getProperty("dictionary_path")), NODE_MEM));
+            NodeDictionary nodeDictionary = new NodeDictionary(isInMemory ? new RAM(NODE_MEM) :
+                    new Disk(new File(probs.getProperty("dictionary_path")), NODE_MEM));
+            ConcreteTripleDictionary ctDictionary = new ConcreteTripleDictionary(isInMemory ? new RAM(TRIPLE_MEM) :
+                    new Disk(new File(probs.getProperty("dictionary_path")), TRIPLE_MEM), nodeDictionary);
+            TriplePatternDictionary[] tpDictionaries = makeTriplePatternDictionaries(probs.getProperty("dictionary_path"),
+                    orders, nodeDictionary);
+            idDictionary = new IdDictionary(ctDictionary, tpDictionaries, orders);
         }
 
         catch (IOException exc)
@@ -56,10 +64,26 @@ public class System
         probs.clear();
     }
 
-    private static List<String> indexOrders()
+    private static String[] indexOrders()
     {
         String orders = probs.getProperty("order");
-        return  List.of(orders.split(","));
+        return  orders.split(",");
+    }
+
+    private static TriplePatternDictionary[] makeTriplePatternDictionaries(String memoryPath,
+                                                                           String[] orders,
+                                                                           NodeDictionary nodeDictionary)
+    {
+        TriplePatternDictionary[] tps = new TriplePatternDictionary[orders.length];
+
+        for (int i = 0; i < orders.length; i++)
+        {
+            tps[i] = new TriplePatternDictionary(memoryPath != null ?
+                     new Disk(new File(memoryPath), orders[i]) : new RAM(orders[i]),
+                     nodeDictionary, orders[i]);
+        }
+
+        return tps;
     }
 
     public static IdDictionary getIdDictionary()
