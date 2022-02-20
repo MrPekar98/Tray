@@ -4,7 +4,8 @@ import org.aau.tray.system.System;
 
 public class IdFactory
 {
-    private static int counter = System.getIdDictionary().highestId().id() + 1;
+    // TODO: Find a way to initialize this to the highest ID + 1
+    private static int counter = 0;
 
     public static NodeId nodeId()
     {

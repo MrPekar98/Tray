@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Disk implements Fetchable
+public class Disk implements Fetchable, Closeable
 {
     private String fileName;
     private File path;
@@ -145,5 +145,11 @@ public class Disk implements Fetchable
     public String toString()
     {
         return this.path.getAbsolutePath() + this.fileName;
+    }
+
+    @Override
+    public void close()
+    {
+        clear();
     }
 }

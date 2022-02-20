@@ -62,7 +62,7 @@ public class ConcreteTripleDictionary extends TripleDictionary
     @Override
     protected void abstractRemove(Tuple<Node> triple)
     {
-        if (isFullyConcrete(triple) && this.dictionary.containsKey(triple))
+        if (isFullyConcrete(triple))
         {
             Integer subjectId = getNodeDictionary().get(triple.get(0)),
                     predicateId = getNodeDictionary().get(triple.get(1)),

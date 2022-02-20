@@ -36,7 +36,6 @@ public class NodeDictionary implements Dictionary<Node, Integer>
     public synchronized void add(Node n, Integer id)
     {
         this.dictionary.put(n, id);
-
         this.mem.save(n, id);
     }
 

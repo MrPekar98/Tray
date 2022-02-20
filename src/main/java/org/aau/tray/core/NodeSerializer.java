@@ -32,27 +32,27 @@ public class NodeSerializer implements Serializable
             throw new NullPointerException("Node is null (maybe because it could not be de-serialized)");
 
         if (n.isBlank())
-            return n.getBlankNodeId().toString() + ":BLANK";
+            return n.getBlankNodeId().toString() + ";BLANK";
 
         else if (n.isLiteral())
-            return n.getLiteral().getValue().toString() + ":LITERAL";
+            return n.getLiteral().getValue().toString() + ";LITERAL";
 
         else if (n.isURI())
-            return n.getURI() + ":URI";
+            return n.getURI() + ";URI";
 
         else if (n.isVariable())
-            return n.getName() + ":VARIABLE";
+            return n.getName() + ";VARIABLE";
 
         else
-            return n.toString() + ":OTHER";
+            return n.toString() + ";OTHER";
     }
 
     private static Node deserialize(String serialized)
     {
-        String[] split = serialized.split(":");
+        String[] split = serialized.split(";");
 
         if (split.length != 2)
-            throw new SerializationException("Serialized node does not have a single ':' split");
+            throw new SerializationException("Serialized node does not have a single ';' split");
 
         if (split[1].equals("BLANK"))
             return NodeFactory.createBlankNode(BlankNodeId.create(split[0]));
